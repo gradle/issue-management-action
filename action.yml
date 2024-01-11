@@ -1,23 +1,16 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
-
-# Add your action's branding here. This will appear on the GitHub Marketplace.
-branding:
-  icon: 'heart'
-  color: 'red'
+name: 'Issue Management Action'
+description: 'An action to manage issue'
+author: 'Gradle'
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
+  script:
+    description: 'script to run'
     required: true
-    default: '1000'
-
-# Define your outputs here.
-outputs:
-  time:
-    description: 'Your output description here'
+  token:
+    required: true
+    description: 'The GitHub authentication token'
+    default: ${{ github.token }}
 
 runs:
   using: node20
