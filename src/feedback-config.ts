@@ -1,12 +1,6 @@
-export type FeedbackLabels = Map<
-  String,
-  { closeLabel: string; message: string }
->
+export type FeedbackLabels = Map<string, { closeLabel: string; message: string }>
 
-export const labelsToRemoveOnClose = new Set([
-  'to-triage',
-  ':wave: team-triage'
-])
+export const labelsToRemoveOnClose = new Set(['to-triage', ':wave: team-triage'])
 
 export const issuesCutoff = 7
 export const issueLabels: FeedbackLabels = new Map([

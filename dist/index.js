@@ -30565,10 +30565,7 @@ function wrappy (fn, cb) {
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.pullsLabels = exports.pullsCutoff = exports.issueLabels = exports.issuesCutoff = exports.labelsToRemoveOnClose = void 0;
-exports.labelsToRemoveOnClose = new Set([
-    'to-triage',
-    ':wave: team-triage'
-]);
+exports.labelsToRemoveOnClose = new Set(['to-triage', ':wave: team-triage']);
 exports.issuesCutoff = 7;
 exports.issueLabels = new Map([
     [
@@ -30733,7 +30730,7 @@ function queryParams(context, feedbackLabels) {
 function wasUpdatedAfterLabeling(events) {
     var hasUpdateEvent = false;
     for (let i = events.length - 1; i >= 0; i--) {
-        if (events[i].__typename != 'LabeledEvent') {
+        if (events[i].__typename !== 'LabeledEvent') {
             hasUpdateEvent = true;
         }
         else if (events[i].label.name.startsWith('pending:')) {
@@ -30746,9 +30743,7 @@ async function process(github, closedLabelsIds, item, cutoff, feedbackLabels, cl
     if (wasUpdatedAfterLabeling(item.timelineItems.nodes)) {
         await github.graphql(removeLabelsMutation, {
             itemId: item.id,
-            labelIds: item.labels.nodes
-                .filter((label) => feedbackLabels.has(label.name))
-                .map((label) => label.id)
+            labelIds: item.labels.nodes.filter((label) => feedbackLabels.has(label.name)).map((label) => label.id)
         });
         console.log(`Removed labels on ${item.number} because it was updated after labeled.`);
     }
@@ -30758,8 +30753,7 @@ async function process(github, closedLabelsIds, item, cutoff, feedbackLabels, cl
             itemId: item.id,
             body: feedbackLabels.get(mainLabel.name).message,
             labelIds: item.labels.nodes
-                .filter((label) => feedbackLabels.has(label.name) ||
-                config.labelsToRemoveOnClose.has(label.name))
+                .filter((label) => feedbackLabels.has(label.name) || config.labelsToRemoveOnClose.has(label.name))
                 .map((label) => label.id),
             closeLabelId: closedLabelsIds.get(feedbackLabels.get(mainLabel.name).closeLabel)
         });
@@ -30788,9 +30782,9 @@ async function run(github, context) {
     try {
         const closedLabelsIds = await getAllClosedLabelIds(github, context);
         const issuesResult = await github.graphql(issuesQuery, queryParams(context, config.issueLabels));
-        issuesResult.repository.issues.nodes.forEach((issue) => process(github, closedLabelsIds, issue, daysAgo(config.issuesCutoff), config.issueLabels, closeIssueMutation));
+        issuesResult.repository.issues.nodes.forEach(async (issue) => process(github, closedLabelsIds, issue, daysAgo(config.issuesCutoff), config.issueLabels, closeIssueMutation));
         const pullsResult = await github.graphql(pullsQuery, queryParams(context, config.pullsLabels));
-        pullsResult.repository.pullRequests.nodes.forEach((pullRequest) => process(github, closedLabelsIds, pullRequest, daysAgo(config.pullsCutoff), config.pullsLabels, closePullMutation));
+        pullsResult.repository.pullRequests.nodes.forEach(async (pullRequest) => process(github, closedLabelsIds, pullRequest, daysAgo(config.pullsCutoff), config.pullsLabels, closePullMutation));
     }
     catch (error) {
         // Fail the workflow run if an error occurs
@@ -30859,7 +30853,6 @@ switch (script) {
     }
     default: {
         throw new Error(`Unknown script: ${script}`);
-        break;
     }
 }
 
@@ -30899,8 +30892,8 @@ exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 async function run(github, context) {
     try {
-        let issueNumber = context.payload.issue.number;
-        let response = await github.graphql(`query($owner:String!, $name:String!, $issue: Int!) {
+        const issueNumber = context.payload.issue.number;
+        const response = await github.graphql(`query($owner:String!, $name:String!, $issue: Int!) {
          repository(owner:$owner, name:$name){
            issue(number: $issue) {
              state, stateReason
@@ -30915,20 +30908,20 @@ async function run(github, context) {
             name: context.repo.repo,
             issue: issueNumber
         });
-        let issue = response.repository.issue;
-        let labels = issue.labels.nodes.map((label) => label.name);
+        const issue = response.repository.issue;
+        const labels = issue.labels.nodes.map((label) => label.name);
         var needsUpdate = false;
-        if (issue.state == 'OPEN') {
+        if (issue.state === 'OPEN') {
             needsUpdate = !(labels.some((label) => label.startsWith('in:')) &&
-                labels.filter((label) => label.startsWith('a:')).length == 1 &&
+                labels.filter((label) => label.startsWith('a:')).length === 1 &&
                 !labels.includes('to-triage'));
         }
-        else if (issue.state == 'CLOSED') {
-            if (issue.stateReason == 'NOT_PLANNED') {
+        else if (issue.state === 'CLOSED') {
+            if (issue.stateReason === 'NOT_PLANNED') {
                 needsUpdate = !labels.some((label) => label.startsWith('closed:'));
             }
-            else if (issue.stateReason == 'COMPLETED') {
-                needsUpdate = issue.milestone == null;
+            else if (issue.stateReason === 'COMPLETED') {
+                needsUpdate = issue.milestone === null;
             }
         }
         if (needsUpdate) {
@@ -30984,8 +30977,8 @@ exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 async function run(github, context) {
     try {
-        let prNumber = context.payload.pullRequest.number;
-        let response = await github.graphql(`query($owner:String!, $name:String!, $pr: Int!) {
+        const prNumber = context.payload.pullRequest.number;
+        const response = await github.graphql(`query($owner:String!, $name:String!, $pr: Int!) {
          repository(owner:$owner, name:$name){
            pullRequest(number: $pr) {
              state
@@ -31000,8 +30993,8 @@ async function run(github, context) {
             name: context.repo.repo,
             pr: prNumber
         });
-        let pr = response.repository.pullRequest;
-        if (pr.state == 'MERGED' && pr.milestone == null) {
+        const pr = response.repository.pullRequest;
+        if (pr.state === 'MERGED' && pr.milestone === null) {
             await github.rest.issues.addLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,

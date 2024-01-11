@@ -27,6 +27,5 @@ switch (script) {
   }
   default: {
     throw new Error(`Unknown script: ${script}`)
-    break
   }
 }
