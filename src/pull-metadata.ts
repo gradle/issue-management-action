@@ -3,8 +3,8 @@ import { GitHub, Context } from './types'
 
 export async function run(github: GitHub, context: Context): Promise<void> {
   try {
-    let prNumber: number = context.payload.pullRequest!.number
-    let response: any = await github.graphql(
+    const prNumber: number = context.payload.pullRequest!.number
+    const response: any = await github.graphql(
       `query($owner:String!, $name:String!, $pr: Int!) {
          repository(owner:$owner, name:$name){
            pullRequest(number: $pr) {
@@ -23,9 +23,9 @@ export async function run(github: GitHub, context: Context): Promise<void> {
       }
     )
 
-    let pr = response.repository.pullRequest
+    const pr = response.repository.pullRequest
 
-    if (pr.state == 'MERGED' && pr.milestone == null) {
+    if (pr.state === 'MERGED' && pr.milestone === null) {
       await github.rest.issues.addLabels({
         owner: context.repo.owner,
         repo: context.repo.repo,

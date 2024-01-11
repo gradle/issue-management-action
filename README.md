@@ -31,6 +31,12 @@ need to perform some initial setup steps before you can develop your action.
    npm install
    ```
 
+1. :building_construction: Linting code
+
+   ```bash
+   npm run lint
+   ```
+
 1. :building_construction: Package the TypeScript for distribution
 
    ```bash

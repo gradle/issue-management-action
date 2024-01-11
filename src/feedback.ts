@@ -94,10 +94,7 @@ const removeLabelsMutation = `mutation ($itemId: ID!, $labelIds: [ID!]!) {
    ${removeLabelsMutationPart}
  }`
 
-function queryParams(
-  context: Context,
-  feedbackLabels: config.FeedbackLabels
-): RequestParameters {
+function queryParams(context: Context, feedbackLabels: config.FeedbackLabels): RequestParameters {
   return {
     owner: context.repo.owner,
     name: context.repo.repo,
@@ -105,10 +102,10 @@ function queryParams(
   }
 }
 
-function wasUpdatedAfterLabeling(events: Array<any>): boolean {
+function wasUpdatedAfterLabeling(events: any[]): boolean {
   var hasUpdateEvent = false
   for (let i = events.length - 1; i >= 0; i--) {
-    if (events[i].__typename != 'LabeledEvent') {
+    if (events[i].__typename !== 'LabeledEvent') {
       hasUpdateEvent = true
     } else if (events[i].label.name.startsWith('pending:')) {
       break
@@ -119,7 +116,7 @@ function wasUpdatedAfterLabeling(events: Array<any>): boolean {
 
 async function process(
   github: GitHub,
-  closedLabelsIds: Map<String, String>,
+  closedLabelsIds: Map<string, string>,
   item: any,
   cutoff: Date,
   feedbackLabels: config.FeedbackLabels,
@@ -128,47 +125,27 @@ async function process(
   if (wasUpdatedAfterLabeling(item.timelineItems.nodes)) {
     await github.graphql(removeLabelsMutation, {
       itemId: item.id,
-      labelIds: item.labels.nodes
-        .filter((label: any) => feedbackLabels.has(label.name))
-        .map((label: any) => label.id)
+      labelIds: item.labels.nodes.filter((label: any) => feedbackLabels.has(label.name)).map((label: any) => label.id)
     })
 
-    console.log(
-      `Removed labels on ${item.number} because it was updated after labeled.`
-    )
+    console.log(`Removed labels on ${item.number} because it was updated after labeled.`)
   } else if (new Date(item.updatedAt) < cutoff) {
-    const mainLabel = item.labels.nodes.find((label: any) =>
-      feedbackLabels.has(label.name)
-    )
+    const mainLabel = item.labels.nodes.find((label: any) => feedbackLabels.has(label.name))
 
     await github.graphql(closeMutation, {
       itemId: item.id,
       body: feedbackLabels.get(mainLabel.name)!.message,
       labelIds: item.labels.nodes
-        .filter(
-          (label: any) =>
-            feedbackLabels.has(label.name) ||
-            config.labelsToRemoveOnClose.has(label.name)
-        )
+        .filter((label: any) => feedbackLabels.has(label.name) || config.labelsToRemoveOnClose.has(label.name))
         .map((label: any) => label.id),
-      closeLabelId: closedLabelsIds.get(
-        feedbackLabels.get(mainLabel.name)!.closeLabel
-      )
+      closeLabelId: closedLabelsIds.get(feedbackLabels.get(mainLabel.name)!.closeLabel)
     })
 
-    console.log(
-      `Closed ${item.number} because it was last updated on ${item.updatedAt} and had the label ${mainLabel.name}.`
-    )
+    console.log(`Closed ${item.number} because it was last updated on ${item.updatedAt} and had the label ${mainLabel.name}.`)
   }
-  console.log(
-    `Skipping ${item.number} because it was last updated on ${item.updatedAt} and ${cutoff}.`
-  )
 }
 
-async function getAllClosedLabelIds(
-  github: GitHub,
-  context: Context
-): Promise<Map<String, String>> {
+async function getAllClosedLabelIds(github: GitHub, context: Context): Promise<Map<string, string>> {
   const response: any = await github.graphql(`query{
       repository(owner: "${context.repo.owner}", name: "${context.repo.repo}"){
         labels(first: 100, query: "closed:") {
@@ -178,9 +155,7 @@ async function getAllClosedLabelIds(
         }
       }
     }`)
-  return new Map(
-    response.repository.labels.nodes.map((label: any) => [label.name, label.id])
-  )
+  return new Map(response.repository.labels.nodes.map((label: any) => [label.name, label.id]))
 }
 
 function daysAgo(days: number): Date {
@@ -193,34 +168,14 @@ export async function run(github: GitHub, context: Context): Promise<void> {
   try {
     const closedLabelsIds = await getAllClosedLabelIds(github, context)
 
-    const issuesResult: any = await github.graphql(
-      issuesQuery,
-      queryParams(context, config.issueLabels)
-    )
-    issuesResult.repository.issues.nodes.forEach((issue: any) =>
-      process(
-        github,
-        closedLabelsIds,
-        issue,
-        daysAgo(config.issuesCutoff),
-        config.issueLabels,
-        closeIssueMutation
-      )
+    const issuesResult: any = await github.graphql(issuesQuery, queryParams(context, config.issueLabels))
+    issuesResult.repository.issues.nodes.forEach(async (issue: any) =>
+      process(github, closedLabelsIds, issue, daysAgo(config.issuesCutoff), config.issueLabels, closeIssueMutation)
     )
 
-    const pullsResult: any = await github.graphql(
-      pullsQuery,
-      queryParams(context, config.pullsLabels)
-    )
-    pullsResult.repository.pullRequests.nodes.forEach((pullRequest: any) =>
-      process(
-        github,
-        closedLabelsIds,
-        pullRequest,
-        daysAgo(config.pullsCutoff),
-        config.pullsLabels,
-        closePullMutation
-      )
+    const pullsResult: any = await github.graphql(pullsQuery, queryParams(context, config.pullsLabels))
+    pullsResult.repository.pullRequests.nodes.forEach(async (pullRequest: any) =>
+      process(github, closedLabelsIds, pullRequest, daysAgo(config.pullsCutoff), config.pullsLabels, closePullMutation)
     )
   } catch (error) {
     // Fail the workflow run if an error occurs

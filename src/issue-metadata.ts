@@ -3,8 +3,8 @@ import { GitHub, Context } from './types'
 
 export async function run(github: GitHub, context: Context): Promise<void> {
   try {
-    let issueNumber: number = context.payload.issue!.number
-    let response: any = await github.graphql(
+    const issueNumber: number = context.payload.issue!.number
+    const response: any = await github.graphql(
       `query($owner:String!, $name:String!, $issue: Int!) {
          repository(owner:$owner, name:$name){
            issue(number: $issue) {
@@ -23,23 +23,21 @@ export async function run(github: GitHub, context: Context): Promise<void> {
       }
     )
 
-    let issue = response.repository.issue
-    let labels = issue.labels.nodes.map((label: any) => label.name)
+    const issue = response.repository.issue
+    const labels = issue.labels.nodes.map((label: any) => label.name)
 
     var needsUpdate = false
-    if (issue.state == 'OPEN') {
+    if (issue.state === 'OPEN') {
       needsUpdate = !(
         labels.some((label: string) => label.startsWith('in:')) &&
-        labels.filter((label: string) => label.startsWith('a:')).length == 1 &&
+        labels.filter((label: string) => label.startsWith('a:')).length === 1 &&
         !labels.includes('to-triage')
       )
-    } else if (issue.state == 'CLOSED') {
-      if (issue.stateReason == 'NOT_PLANNED') {
-        needsUpdate = !labels.some((label: string) =>
-          label.startsWith('closed:')
-        )
-      } else if (issue.stateReason == 'COMPLETED') {
-        needsUpdate = issue.milestone == null
+    } else if (issue.state === 'CLOSED') {
+      if (issue.stateReason === 'NOT_PLANNED') {
+        needsUpdate = !labels.some((label: string) => label.startsWith('closed:'))
+      } else if (issue.stateReason === 'COMPLETED') {
+        needsUpdate = issue.milestone === null
       }
     }
 
