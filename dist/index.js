@@ -30759,7 +30759,6 @@ async function process(github, closedLabelsIds, item, cutoff, feedbackLabels, cl
         });
         console.log(`Closed ${item.number} because it was last updated on ${item.updatedAt} and had the label ${mainLabel.name}.`);
     }
-    console.log(`Skipping ${item.number} because it was last updated on ${item.updatedAt} and ${cutoff}.`);
 }
 async function getAllClosedLabelIds(github, context) {
     const response = await github.graphql(`query{
