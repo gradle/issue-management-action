@@ -146,11 +146,11 @@ async function process(
 
     await github.graphql(closeMutation, {
       itemId: item.id,
-      body: feedbackLabels.get(mainLabel.name)!.message,
+      body: feedbackLabels.get(mainLabel.name)!.message, // eslint-disable-line @typescript-eslint/no-non-null-assertion
       labelIds: item.labels.nodes
         .filter((label: any) => feedbackLabels.has(label.name) || config.labelsToRemoveOnClose.has(label.name))
         .map((label: any) => label.id),
-      closeLabelId: closedLabelsIds.get(feedbackLabels.get(mainLabel.name)!.closeLabel)
+      closeLabelId: closedLabelsIds.get(feedbackLabels.get(mainLabel.name)!.closeLabel) // eslint-disable-line @typescript-eslint/no-non-null-assertion
     })
 
     console.log(`Closed ${item.number} because it was last updated on ${item.updatedAt} and had the label ${mainLabel.name}.`)

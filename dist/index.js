@@ -30763,11 +30763,11 @@ async function process(github, closedLabelsIds, item, cutoff, feedbackLabels, cl
         const mainLabel = item.labels.nodes.find((label) => feedbackLabels.has(label.name));
         await github.graphql(closeMutation, {
             itemId: item.id,
-            body: feedbackLabels.get(mainLabel.name).message,
+            body: feedbackLabels.get(mainLabel.name).message, // eslint-disable-line @typescript-eslint/no-non-null-assertion
             labelIds: item.labels.nodes
                 .filter((label) => feedbackLabels.has(label.name) || config.labelsToRemoveOnClose.has(label.name))
                 .map((label) => label.id),
-            closeLabelId: closedLabelsIds.get(feedbackLabels.get(mainLabel.name).closeLabel)
+            closeLabelId: closedLabelsIds.get(feedbackLabels.get(mainLabel.name).closeLabel) // eslint-disable-line @typescript-eslint/no-non-null-assertion
         });
         console.log(`Closed ${item.number} because it was last updated on ${item.updatedAt} and had the label ${mainLabel.name}.`);
     }
@@ -30903,7 +30903,7 @@ exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 async function run(github, context) {
     try {
-        const issueNumber = context.payload.issue.number;
+        const issueNumber = context.payload.issue.number; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         const response = await github.graphql(`query($owner:String!, $name:String!, $issue: Int!) {
          repository(owner:$owner, name:$name){
            issue(number: $issue) {
@@ -30988,7 +30988,7 @@ exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 async function run(github, context) {
     try {
-        const prNumber = context.payload.pullRequest.number;
+        const prNumber = context.payload.pullRequest.number; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         const response = await github.graphql(`query($owner:String!, $name:String!, $pr: Int!) {
          repository(owner:$owner, name:$name){
            pullRequest(number: $pr) {

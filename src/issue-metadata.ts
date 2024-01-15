@@ -3,7 +3,7 @@ import { GitHub, Context } from './types'
 
 export async function run(github: GitHub, context: Context): Promise<void> {
   try {
-    const issueNumber: number = context.payload.issue!.number
+    const issueNumber: number = context.payload.issue!.number // eslint-disable-line @typescript-eslint/no-non-null-assertion
     const response: any = await github.graphql(
       `query($owner:String!, $name:String!, $issue: Int!) {
          repository(owner:$owner, name:$name){
