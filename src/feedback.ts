@@ -15,10 +15,12 @@ const issuesQuery = `query($owner:String!, $name:String!, $labels: [String!]) {
               __typename
               ... on LabeledEvent {
                 createdAt
-                label {
-                  name
-                }
+                label { name }
+                actor { login }
               }
+              ... on ClosedEvent { actor { login } }
+              ... on IssueComment { author { login } }
+              ... on RenamedTitleEvent { actor { login } }
             }
           }
         }
@@ -36,17 +38,22 @@ const pullsQuery = `query($owner:String!, $name:String!, $labels: [String!]) {
           }
           timelineItems(last: 100, itemTypes: [
             LABELED_EVENT, BASE_REF_CHANGED_EVENT, CLOSED_EVENT, ISSUE_COMMENT, RENAMED_TITLE_EVENT,
-            PULL_REQUEST_COMMIT, PULL_REQUEST_COMMIT_COMMENT_THREAD, PULL_REQUEST_REVIEW_THREAD,
-            PULL_REQUEST_REVIEW, PULL_REQUEST_REVISION_MARKER, READY_FOR_REVIEW_EVENT, REVIEW_REQUESTED_EVENT
+            PULL_REQUEST_COMMIT, PULL_REQUEST_REVIEW, READY_FOR_REVIEW_EVENT, REVIEW_REQUESTED_EVENT
           ]) {
             nodes {
               __typename
               ... on LabeledEvent {
                 createdAt
-                label {
-                  name
-                }
+                label { name }
+                actor { login }
               }
+              ... on ClosedEvent { actor { login } }
+              ... on IssueComment { author { login } }
+              ... on RenamedTitleEvent { actor { login } }
+              ... on PullRequestCommit { pullRequest { author { login } } }
+              ... on PullRequestReview { author { login } }
+              ... on ReadyForReviewEvent { actor { login } }
+              ... on ReviewRequestedEvent { actor { login } }
             }
           }
         }
@@ -103,15 +110,20 @@ function queryParams(context: Context, feedbackLabels: config.FeedbackLabels): R
 }
 
 function wasUpdatedAfterLabeling(events: any[]): boolean {
-  var hasUpdateEvent = false
+  const authors = new Set()
+  var requester = null
   for (let i = events.length - 1; i >= 0; i--) {
-    if (events[i].__typename !== 'LabeledEvent') {
-      hasUpdateEvent = true
-    } else if (events[i].label.name.startsWith('pending:')) {
+    const event = events[i]
+    if (event.__typename !== 'LabeledEvent') {
+      const author = event.actor?.login ?? event.author?.login ?? event.pullRequest?.author?.login
+      authors.add(author)
+    } else if (event.label.name.startsWith('pending:')) {
+      requester = event.actor.login
       break
     }
   }
-  return hasUpdateEvent
+  authors.delete(requester)
+  return authors.size > 0
 }
 
 async function process(
