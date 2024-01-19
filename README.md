@@ -48,6 +48,10 @@ need to perform some initial setup steps before you can develop your action.
 This project includes a helper script designed to streamline the process of
 tagging and pushing new releases for GitHub Actions.
 
+```shell
+./script/release
+```
+
 GitHub Actions allows users to select a specific version of the action to use,
 based on release tags. Our script simplifies this process by performing the
 following steps:
