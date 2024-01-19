@@ -30789,6 +30789,7 @@ function daysAgo(days) {
     result.setDate(result.getDate() - days);
     return result;
 }
+// checks if issues with feedback labels are updated or should be closed
 async function run(github, context) {
     try {
         const closedLabelsIds = await getAllClosedLabelIds(github, context);

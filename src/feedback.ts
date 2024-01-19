@@ -176,6 +176,7 @@ function daysAgo(days: number): Date {
   return result
 }
 
+// checks if issues with feedback labels are updated or should be closed
 export async function run(github: GitHub, context: Context): Promise<void> {
   try {
     const closedLabelsIds = await getAllClosedLabelIds(github, context)
