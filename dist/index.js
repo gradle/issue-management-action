@@ -30989,6 +30989,7 @@ exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 async function run(github, context) {
     try {
+        console.log(`Received event ${JSON.stringify(context.payload)}`);
         const prNumber = context.payload.pullRequest.number; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         const response = await github.graphql(`query($owner:String!, $name:String!, $pr: Int!) {
          repository(owner:$owner, name:$name){
@@ -31019,6 +31020,7 @@ async function run(github, context) {
         // Fail the workflow run if an error occurs
         if (error instanceof Error)
             core.setFailed(error.message);
+        throw error;
     }
 }
 exports.run = run;

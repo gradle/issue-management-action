@@ -3,6 +3,7 @@ import { GitHub, Context } from './types'
 
 export async function run(github: GitHub, context: Context): Promise<void> {
   try {
+    console.log(`Received event ${JSON.stringify(context.payload)}`)
     const prNumber: number = context.payload.pullRequest!.number // eslint-disable-line @typescript-eslint/no-non-null-assertion
     const response: any = await github.graphql(
       `query($owner:String!, $name:String!, $pr: Int!) {
@@ -36,5 +37,6 @@ export async function run(github: GitHub, context: Context): Promise<void> {
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
+    throw error
   }
 }
