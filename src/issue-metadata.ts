@@ -52,5 +52,6 @@ export async function run(github: GitHub, context: Context): Promise<void> {
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
+    throw error
   }
 }
