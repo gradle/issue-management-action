@@ -32,6 +32,13 @@ export async function run(github: GitHub, context: Context): Promise<void> {
         issue_number: prNumber,
         labels: ['to-triage']
       })
+    } else if (pr.state === 'CLOSED' && pr.milestone != null) {
+      await github.rest.issues.update({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        issue_number: prNumber,
+        milestone: null
+      })
     }
   } catch (error) {
     // Fail the workflow run if an error occurs
