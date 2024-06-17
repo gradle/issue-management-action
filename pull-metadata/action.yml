@@ -1,0 +1,13 @@
+name: 'Issue Management Action - PR Metadata'
+description: 'Ensure that PR has proper labels and milestone'
+author: 'Gradle'
+
+inputs:
+  token:
+    required: true
+    description: 'The GitHub authentication token'
+    default: ${{ github.token }}
+
+runs:
+  using: node20
+  main: ../dist/pull-metadata/index.js

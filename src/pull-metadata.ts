@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import * as common from './common'
 import { GitHub, Context } from './types'
 
 export async function run(github: GitHub, context: Context): Promise<void> {
@@ -46,3 +47,5 @@ export async function run(github: GitHub, context: Context): Promise<void> {
     throw error
   }
 }
+
+run(common.getGitHub(), common.getContext())
