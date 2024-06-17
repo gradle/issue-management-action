@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import * as config from './feedback-config'
+import * as common from './common'
 import { GitHub, Context, RequestParameters } from './types'
 
 const issuesQuery = `query($owner:String!, $name:String!, $labels: [String!]) {
@@ -196,3 +197,5 @@ export async function run(github: GitHub, context: Context): Promise<void> {
     throw error
   }
 }
+
+run(common.getGitHub(), common.getContext())

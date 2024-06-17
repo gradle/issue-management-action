@@ -16,8 +16,10 @@
     "format:write": "prettier --write **/*.ts",
     "format:check": "prettier --check **/*.ts",
     "lint": "npx eslint . -c ./.github/linters/.eslintrc.yml",
-    "package": "ncc build src/index.ts --license licenses.txt",
-    "package:watch": "npm run package -- --watch",
+    "build-feedback": "ncc build src/feedback.ts -o dist/feedback --license licenses.txt",
+    "build-issue-metadata": "ncc build src/issue-metadata.ts -o dist/issue-metadata --license licenses.txt",
+    "build-pull-metadata": "ncc build src/pull-metadata.ts -o dist/pull-metadata --license licenses.txt",
+    "package": "npm-run-all --parallel build-*",
     "test": "jest",
     "all": "npm run format:write && npm run lint && npm run test && npm run coverage && npm run package"
   },
@@ -72,6 +74,7 @@
     "prettier": "^3.2.2",
     "prettier-eslint": "^16.2.0",
     "ts-jest": "^29.1.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "npm-run-all": "4.1.5"
   }
 }
