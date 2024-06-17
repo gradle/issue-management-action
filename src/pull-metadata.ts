@@ -10,6 +10,7 @@ export async function run(github: GitHub, context: Context): Promise<void> {
          repository(owner:$owner, name:$name){
            pullRequest(number: $pr) {
              state
+             baseRefName
              milestone { title }
              labels(first: 100) {
                nodes { name }
@@ -26,7 +27,7 @@ export async function run(github: GitHub, context: Context): Promise<void> {
 
     const pr = response.repository.pullRequest
 
-    if (pr.state === 'MERGED' && pr.milestone === null) {
+    if (pr.state === 'MERGED' && pr.milestone === null && (pr.baseRefName === 'master' || pr.baseRefName === 'main' || pr.baseRefName.startsWith('release'))) {
       await github.rest.issues.addLabels({
         owner: context.repo.owner,
         repo: context.repo.repo,

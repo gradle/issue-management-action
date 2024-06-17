@@ -30861,6 +30861,7 @@ async function run(github, context) {
          repository(owner:$owner, name:$name){
            pullRequest(number: $pr) {
              state
+             baseRefName
              milestone { title }
              labels(first: 100) {
                nodes { name }
@@ -30873,7 +30874,7 @@ async function run(github, context) {
             pr: prNumber
         });
         const pr = response.repository.pullRequest;
-        if (pr.state === 'MERGED' && pr.milestone === null) {
+        if (pr.state === 'MERGED' && pr.milestone === null && (pr.baseRefName === 'master' || pr.baseRefName === 'main' || pr.baseRefName.startsWith('release'))) {
             await github.rest.issues.addLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
