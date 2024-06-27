@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as common from './common'
 import { GitHub, Context } from './types'
-import('linkedom')
+import * as cheerio from 'cheerio'
 
 const pendingDecisionLabel = 'pending:release-notes'
 const hasNotesLabel = 'has:release-notes'
@@ -29,9 +29,9 @@ function shouldHaveReleaseNotes(issue: any): boolean {
 async function getLinkedPrNumbers(context: Context, issue: any): Promise<number[]> {
   const response = await fetch(`https://github.com/${context.repo.owner}/${context.repo.repo}/issues/${issue.number}`)
   const html = await response.text()
-  const document = new DOMParser().parseFromString(html, 'text/html')
-  const prNumbers = Array.from(document.querySelectorAll('development-menu form span a'))
-    .map(anchor => anchor.getAttribute('href'))
+  const document = cheerio.load(html)
+  const prNumbers = Array.from(document('development-menu form span a'))
+    .map(element => document(element).attr('href'))
     .filter(url => url != null && url.length > 0)
     .map(url => parseInt(url!.split('/').pop()!)) //eslint-disable-line @typescript-eslint/no-non-null-assertion
     .filter(id => !isNaN(id))
