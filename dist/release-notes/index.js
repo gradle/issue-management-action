@@ -41889,17 +41889,21 @@ const pendingDecisionLabel = 'pending:release-notes';
 const hasNotesLabel = 'has:release-notes';
 const notReleaseNoteWorthyLabel = 'has:release-notes-decision';
 const worthyLabels = new Set(['a:feature', 'a:regression', 'a:performance-improvement', 'a:epic']);
-//eslint-disable-next-line prettier/prettier
+const highlyVotedIssueThreshold = 20;
+// prettier-ignore
 const releaseNotesPaths = new Set([
     'subprojects/docs/src/docs/release/notes.md',
     'platforms/documentation/docs/src/docs/release/notes.md'
 ]);
 function shouldHaveReleaseNotes(issue) {
     const labels = issue.labels.nodes.map((label) => label.name);
-    //eslint-disable-next-line prettier/prettier
-    return labels.some((label) => worthyLabels.has(label)) &&
-        !labels.includes(notReleaseNoteWorthyLabel) &&
-        !labels.includes(hasNotesLabel); //in case notes are updated in an unrelated PR
+    // prettier-ignore
+    const noteWorthy = labels.some((label) => worthyLabels.has(label)) ||
+        issue.reactions.totalCount >= highlyVotedIssueThreshold;
+    // prettier-ignore
+    const excluded = labels.includes(notReleaseNoteWorthyLabel) ||
+        labels.includes(hasNotesLabel); //in case notes are updated in an unrelated PR
+    return noteWorthy && !excluded;
 }
 // see https://github.com/orgs/community/discussions/24492
 // and https://github.com/orgs/community/discussions/24367#discussioncomment-3243930
@@ -41919,14 +41923,14 @@ async function hasReleaseNotes(github, context, issue) {
     if (linkedPrNumbers.length === 0) {
         return false;
     }
-    //eslint-disable-next-line prettier/prettier
+    // prettier-ignore
     const queryBody = linkedPrNumbers.map((number) => `
     pr${number}: pullRequest(number: ${number}) {
       number
       files(first: 100) {
       nodes { path }
     }
-  `).join(''); //eslint-disable-line prettier/prettier
+  `).join(''); // prettier-ignore
     const response = await github.graphql(`query($owner: String!, $name: String!) {
        repository(owner: $owner, name: $name) {
          ${queryBody}
@@ -41956,6 +41960,7 @@ async function run(github, context) {
              labels(first: 100) {
                nodes { name }
              }
+             reactions{ totalCount }
            }
          }
        }`, {
