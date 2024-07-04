@@ -37,6 +37,16 @@ need to perform some initial setup steps before you can develop your action.
    npm run lint
    ```
 
+Note: to mute unwanted formatting violations, use:
+```
+// prettier-ignore
+```
+for prettier/prettier violations and
+```
+// eslint-disable-next-line %rule name%
+```
+for others.
+
 1. :building_construction: Package the TypeScript for distribution
 
    ```bash
