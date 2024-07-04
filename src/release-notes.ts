@@ -8,6 +8,7 @@ const hasNotesLabel = 'has:release-notes'
 const notReleaseNoteWorthyLabel = 'has:release-notes-decision'
 
 const worthyLabels = new Set<string>(['a:feature', 'a:regression', 'a:performance-improvement', 'a:epic'])
+const highlyVotedIssueThreshold = 20
 
 // prettier-ignore
 const releaseNotesPaths = new Set<string>([
@@ -18,10 +19,17 @@ const releaseNotesPaths = new Set<string>([
 function shouldHaveReleaseNotes(issue: any): boolean {
   const labels = issue.labels.nodes.map((label: any) => label.name)
 
-  //eslint-disable-next-line prettier/prettier
-  return labels.some((label: string) => worthyLabels.has(label)) &&
-    !labels.includes(notReleaseNoteWorthyLabel) &&
-    !labels.includes(hasNotesLabel) //in case notes are updated in an unrelated PR
+  // prettier-ignore
+  const noteWorthy =
+    labels.some((label: string) => worthyLabels.has(label)) ||
+    issue.reactions.totalCount >= highlyVotedIssueThreshold
+
+  // prettier-ignore
+  const excluded =
+    labels.includes(notReleaseNoteWorthyLabel) ||
+    labels.includes(hasNotesLabel) //in case notes are updated in an unrelated PR
+
+  return noteWorthy && !excluded
 }
 
 // see https://github.com/orgs/community/discussions/24492
@@ -87,6 +95,7 @@ async function run(github: GitHub, context: Context): Promise<void> {
              labels(first: 100) {
                nodes { name }
              }
+             reactions{ totalCount }
            }
          }
        }`,
