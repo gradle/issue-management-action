@@ -29,17 +29,28 @@ function shouldHaveReleaseNotes(issue: any): boolean {
     labels.includes(notReleaseNoteWorthyLabel) ||
     labels.includes(hasNotesLabel) //in case notes are updated in an unrelated PR
 
+  console.log(`shouldHaveReleaseNotes status: ${noteWorthy && !excluded}`)
   return noteWorthy && !excluded
 }
 
 // see https://github.com/orgs/community/discussions/24492
 // and https://github.com/orgs/community/discussions/24367#discussioncomment-3243930
 async function getLinkedPrNumbers(context: Context, issue: any): Promise<number[]> {
-  const response = await fetch(`https://github.com/${context.repo.owner}/${context.repo.repo}/issues/${issue.number}`)
+  const issueUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/issues/${issue.number}`
+  console.log(`issue url: ${issueUrl}`)
+
+  const response = await fetch(issueUrl)
+  if (response.status !== 200) {
+    throw new Error(`Failed to fetch issue page from ${issueUrl}: ${response.statusText}`)
+  }
+
   const html = await response.text()
   const document = cheerio.load(html)
-  const prNumbers = Array.from(document('development-menu form span a'))
-    .map(element => document(element).attr('href'))
+
+  const urls = Array.from(document('development-menu form span a')).map(element => document(element).attr('href'))
+  console.log(`urls: ${urls}`)
+
+  const prNumbers = urls
     .filter(url => url != null && url.length > 0)
     .map(url => parseInt(url!.split('/').pop()!)) //eslint-disable-line @typescript-eslint/no-non-null-assertion
     .filter(id => !isNaN(id))
@@ -49,6 +60,7 @@ async function getLinkedPrNumbers(context: Context, issue: any): Promise<number[
 
 async function hasReleaseNotes(github: GitHub, context: Context, issue: any): Promise<boolean> {
   const linkedPrNumbers = await getLinkedPrNumbers(context, issue)
+  console.log(`linked prs: ${linkedPrNumbers}`)
   if (linkedPrNumbers.length === 0) {
     return false
   }
@@ -57,7 +69,8 @@ async function hasReleaseNotes(github: GitHub, context: Context, issue: any): Pr
     pr${number}: pullRequest(number: ${number}) {
       number
       files(first: 100) {
-      nodes { path }
+        nodes { path }
+      }
     }
   `).join('') // prettier-ignore
 
@@ -73,6 +86,7 @@ async function hasReleaseNotes(github: GitHub, context: Context, issue: any): Pr
       prNumbers: linkedPrNumbers
     }
   )
+  console.log(`prs response: ${JSON.stringify(response)}`)
   return linkedPrNumbers
     .flatMap((number: number) => response.repository[`pr${number}`].files.nodes.map((node: any) => node.path))
     .some((path: string) => releaseNotesPaths.has(path))
@@ -85,7 +99,7 @@ async function run(github: GitHub, context: Context): Promise<void> {
       `query($owner:String!, $name:String!, $issue: Int!) {
          repository(owner:$owner, name:$name){
            issue(number: $issue) {
-             state, stateReason
+             state, stateReason, number
              assignees(first: 100) {
                nodes {
                  login
@@ -147,6 +161,12 @@ After that, close the issue.`
         repo: context.repo.repo,
         issue_number: issueNumber,
         body: commentBody
+      })
+      await github.rest.issues.addLabels({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        issue_number: issueNumber,
+        labels: [pendingDecisionLabel]
       })
     }
   } catch (error) {
