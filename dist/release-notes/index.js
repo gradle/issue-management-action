@@ -41934,7 +41934,7 @@ async function hasReleaseNotes(github, context, issue) {
     // prettier-ignore
     const queryBody = linkedPrNumbers.map((number) => `
     pr${number}: pullRequest(number: ${number}) {
-      number
+      number, state
       files(first: 100) {
         nodes { path }
       }
@@ -41951,7 +41951,9 @@ async function hasReleaseNotes(github, context, issue) {
     });
     console.log(`prs response: ${JSON.stringify(response)}`);
     return linkedPrNumbers
-        .flatMap((number) => response.repository[`pr${number}`].files.nodes.map((node) => node.path))
+        .map((number) => response.repository[`pr${number}`])
+        .filter(pr => pr.state === 'MERGED')
+        .flatMap(pr => pr.files.nodes.map((node) => node.path))
         .some((path) => releaseNotesPaths.has(path));
 }
 async function run(github, context) {

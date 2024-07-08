@@ -67,7 +67,7 @@ async function hasReleaseNotes(github: GitHub, context: Context, issue: any): Pr
   // prettier-ignore
   const queryBody: string = linkedPrNumbers.map((number: number) => `
     pr${number}: pullRequest(number: ${number}) {
-      number
+      number, state
       files(first: 100) {
         nodes { path }
       }
@@ -88,7 +88,9 @@ async function hasReleaseNotes(github: GitHub, context: Context, issue: any): Pr
   )
   console.log(`prs response: ${JSON.stringify(response)}`)
   return linkedPrNumbers
-    .flatMap((number: number) => response.repository[`pr${number}`].files.nodes.map((node: any) => node.path))
+    .map((number: number) => response.repository[`pr${number}`])
+    .filter(pr => pr.state === 'MERGED')
+    .flatMap(pr => pr.files.nodes.map((node: any) => node.path))
     .some((path: string) => releaseNotesPaths.has(path))
 }
 
