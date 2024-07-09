@@ -124,7 +124,7 @@ async function run(github: GitHub, context: Context): Promise<void> {
 
     const issue = response.repository.issue
 
-    if (issue.state !== 'CLOSED' || !shouldHaveReleaseNotes(issue)) {
+    if (issue.state !== 'CLOSED' || issue.stateReason !== 'COMPLETED' || !shouldHaveReleaseNotes(issue)) {
       return
     }
 

@@ -41981,7 +41981,7 @@ async function run(github, context) {
             issue: issueNumber
         });
         const issue = response.repository.issue;
-        if (issue.state !== 'CLOSED' || !shouldHaveReleaseNotes(issue)) {
+        if (issue.state !== 'CLOSED' || issue.stateReason !== 'COMPLETED' || !shouldHaveReleaseNotes(issue)) {
             return;
         }
         if (await hasReleaseNotes(github, context, issue)) {
