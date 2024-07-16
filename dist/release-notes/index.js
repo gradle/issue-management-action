@@ -41981,7 +41981,18 @@ async function run(github, context) {
             issue: issueNumber
         });
         const issue = response.repository.issue;
-        if (issue.state !== 'CLOSED' || issue.stateReason !== 'COMPLETED' || !shouldHaveReleaseNotes(issue)) {
+        if (issue.state !== 'CLOSED') {
+            return;
+        }
+        if (issue.stateReason !== 'COMPLETED' || !shouldHaveReleaseNotes(issue)) {
+            if (issue.labels.nodes.some((label) => label.name === pendingDecisionLabel)) {
+                await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    name: pendingDecisionLabel
+                });
+            }
             return;
         }
         if (await hasReleaseNotes(github, context, issue)) {
@@ -42007,13 +42018,13 @@ async function run(github, context) {
                 state_reason: 'reopened'
             });
             const assigneeMention = issue.assignees.nodes.map((assignee) => `@${assignee.login}`).join(', ');
-            const commentBody = `${assigneeMention} This issue looks release-note worthy, but no PR with release-notes update has been found.
+            const commentBody = `${assigneeMention} This issue was closed as completed and looks release-note worthy, but no PR with release-notes update has been found.
 Please, do one of the following:
 
 1. Attach a PR with the release notes update to this issue.
-2. Add the \`${notReleaseNoteWorthyLabel}\` label to the issue if it's not release-note-worthy or it was fixed in an old release.
-
-After that, close the issue.`;
+2. Add the \`${notReleaseNoteWorthyLabel}\` label to the issue if it's not release-note-worthy or it was fixed in an old release and close the issue.
+3. Close issue as "not planned".
+`;
             await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
