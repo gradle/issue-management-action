@@ -2,6 +2,8 @@ import * as core from '@actions/core'
 import * as common from './common'
 import { GitHub, Context } from './types'
 
+const pendingMilestoneLabel = 'pending:milestone'
+
 export async function run(github: GitHub, context: Context): Promise<void> {
   try {
     const prNumber: number = context.payload.pull_request!.number // eslint-disable-line @typescript-eslint/no-non-null-assertion
@@ -26,15 +28,25 @@ export async function run(github: GitHub, context: Context): Promise<void> {
     )
 
     const pr = response.repository.pullRequest
+    const labels = pr.labels.nodes.map((label: any) => label.name)
 
-    if (pr.state === 'MERGED' && pr.milestone === null && (pr.baseRefName === 'master' || pr.baseRefName === 'main' || pr.baseRefName.startsWith('release'))) {
-      await github.rest.issues.addLabels({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        issue_number: prNumber,
-        labels: ['to-triage']
-      })
-    } else if (pr.state === 'CLOSED' && pr.milestone != null) {
+    if (pr.state === 'MERGED' && (pr.baseRefName === 'master' || pr.baseRefName === 'main' || pr.baseRefName.startsWith('release'))) {
+      if (pr.milestone === null) {
+        await github.rest.issues.addLabels({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          issue_number: prNumber,
+          labels: ['to-triage', pendingMilestoneLabel]
+        })
+      } else if (labels.includes(pendingMilestoneLabel)) {
+        await github.rest.issues.removeLabel({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          issue_number: prNumber,
+          name: pendingMilestoneLabel
+        })
+      }
+    } else if (pr.state === 'CLOSED' && pr.milestone !== null) {
       await github.rest.issues.update({
         owner: context.repo.owner,
         repo: context.repo.repo,

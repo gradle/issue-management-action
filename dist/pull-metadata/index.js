@@ -30854,6 +30854,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const common = __importStar(__nccwpck_require__(9108));
+const pendingMilestoneLabel = 'pending:milestone';
 async function run(github, context) {
     try {
         const prNumber = context.payload.pull_request.number; // eslint-disable-line @typescript-eslint/no-non-null-assertion
@@ -30874,15 +30875,26 @@ async function run(github, context) {
             pr: prNumber
         });
         const pr = response.repository.pullRequest;
-        if (pr.state === 'MERGED' && pr.milestone === null && (pr.baseRefName === 'master' || pr.baseRefName === 'main' || pr.baseRefName.startsWith('release'))) {
-            await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: prNumber,
-                labels: ['to-triage']
-            });
+        const labels = pr.labels.nodes.map((label) => label.name);
+        if (pr.state === 'MERGED' && (pr.baseRefName === 'master' || pr.baseRefName === 'main' || pr.baseRefName.startsWith('release'))) {
+            if (pr.milestone === null) {
+                await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: prNumber,
+                    labels: ['to-triage', pendingMilestoneLabel]
+                });
+            }
+            else if (labels.includes(pendingMilestoneLabel)) {
+                await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: prNumber,
+                    name: pendingMilestoneLabel
+                });
+            }
         }
-        else if (pr.state === 'CLOSED' && pr.milestone != null) {
+        else if (pr.state === 'CLOSED' && pr.milestone !== null) {
             await github.rest.issues.update({
                 owner: context.repo.owner,
                 repo: context.repo.repo,

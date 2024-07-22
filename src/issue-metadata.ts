@@ -37,8 +37,24 @@ export async function run(github: GitHub, context: Context): Promise<void> {
     } else if (issue.state === 'CLOSED') {
       if (issue.stateReason === 'NOT_PLANNED') {
         needsUpdate = !labels.some((label: string) => label.startsWith('closed:'))
+        if (labels.includes('pending:milestone')) {
+          await github.rest.issues.removeLabel({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: issueNumber,
+            name: 'pending:milestone'
+          })
+        }
       } else if (issue.stateReason === 'COMPLETED') {
-        needsUpdate = issue.milestone === null
+        if (issue.milestone === null) {
+          needsUpdate = true
+          await github.rest.issues.addLabels({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: issueNumber,
+            labels: ['pending:milestone']
+          })
+        }
       }
     }
 
