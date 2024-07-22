@@ -30836,14 +30836,14 @@ exports.issueLabels = new Map([
         'pending:reproducer',
         {
             closeLabel: 'closed:unreproducible',
-            message: 'While we asked for a reproducer, none was provided. If you provide a valid reproducer, we will consider this issue again. In the meantime, closing as unreproducible.'
+            message: 'We previously asked for a reproducer, and unfortunately, none was provided. If you provide a valid reproducer, we may revisit this issue. In the meantime, this issue will be closed as unreproducible.'
         }
     ],
     [
         'pending:feedback',
         {
             closeLabel: 'closed:missing-feedback',
-            message: 'While we asked for feedback, none was provided. If you provide the requested feedback, we will consider this issue again. In the meantime, closing as missing feedback.'
+            message: 'We previously asked for feedback, and unfortunately, none was provided. If you provide the requested feedback, we may revisit this issue. In the meantime, this issue will be closed as missing feedback.'
         }
     ]
 ]);
