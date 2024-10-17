@@ -41853,6 +41853,66 @@ exports.getContext = getContext;
 
 /***/ }),
 
+/***/ 7942:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getLinkedPrNumbers = void 0;
+const cheerio = __importStar(__nccwpck_require__(4612));
+// see https://github.com/orgs/community/discussions/24492
+// and https://github.com/orgs/community/discussions/24367#discussioncomment-3243930
+async function getLinkedPrNumbers(repo, issue) {
+    const issueUrl = `https://github.com/${repo.owner}/${repo.repo}/issues/${issue.number}`;
+    console.log(`issue url: ${issueUrl}`);
+    const response = await fetch(issueUrl);
+    if (response.status !== 200) {
+        throw new Error(`Failed to fetch issue page from ${issueUrl}: ${response.statusText}`);
+    }
+    const html = await response.text();
+    const document = cheerio.load(html);
+    const container = document('div[data-testid=issue-metadata-fixed]');
+    if (container.length === 0) {
+        throw new Error(`No container for linked PRs found in issue page ${issueUrl}, please update the GH action`);
+    }
+    const urls = Array.from(container.find('a')).map(element => document(element).attr('href'));
+    console.log(`urls: ${urls}`);
+    const prNumbers = urls
+        .filter(url => url != null && url.length > 0)
+        .map(url => parseInt(url.split('/').pop())) //eslint-disable-line @typescript-eslint/no-non-null-assertion
+        .filter(id => !isNaN(id));
+    console.log(`pr numbers: ${prNumbers}`);
+    return Array.from(new Set(prNumbers));
+}
+exports.getLinkedPrNumbers = getLinkedPrNumbers;
+
+
+/***/ }),
+
 /***/ 9260:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -41884,7 +41944,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const common = __importStar(__nccwpck_require__(9108));
-const cheerio = __importStar(__nccwpck_require__(4612));
+const linked_prs_1 = __nccwpck_require__(7942);
 const pendingDecisionLabel = 'pending:release-notes';
 const hasNotesLabel = 'has:release-notes';
 const notReleaseNoteWorthyLabel = 'has:release-notes-decision';
@@ -41906,27 +41966,8 @@ function shouldHaveReleaseNotes(issue) {
     console.log(`shouldHaveReleaseNotes status: ${noteWorthy && !excluded}`);
     return noteWorthy && !excluded;
 }
-// see https://github.com/orgs/community/discussions/24492
-// and https://github.com/orgs/community/discussions/24367#discussioncomment-3243930
-async function getLinkedPrNumbers(context, issue) {
-    const issueUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/issues/${issue.number}`;
-    console.log(`issue url: ${issueUrl}`);
-    const response = await fetch(issueUrl);
-    if (response.status !== 200) {
-        throw new Error(`Failed to fetch issue page from ${issueUrl}: ${response.statusText}`);
-    }
-    const html = await response.text();
-    const document = cheerio.load(html);
-    const urls = Array.from(document('development-menu form span a')).map(element => document(element).attr('href'));
-    console.log(`urls: ${urls}`);
-    const prNumbers = urls
-        .filter(url => url != null && url.length > 0)
-        .map(url => parseInt(url.split('/').pop())) //eslint-disable-line @typescript-eslint/no-non-null-assertion
-        .filter(id => !isNaN(id));
-    return Array.from(new Set(prNumbers));
-}
 async function hasReleaseNotes(github, context, issue) {
-    const linkedPrNumbers = await getLinkedPrNumbers(context, issue);
+    const linkedPrNumbers = await (0, linked_prs_1.getLinkedPrNumbers)(context.repo, issue);
     console.log(`linked prs: ${linkedPrNumbers}`);
     if (linkedPrNumbers.length === 0) {
         return false;

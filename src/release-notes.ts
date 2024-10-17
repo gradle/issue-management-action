@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as common from './common'
+import { getLinkedPrNumbers } from './linked-prs'
 import { GitHub, Context } from './types'
-import * as cheerio from 'cheerio'
 
 const pendingDecisionLabel = 'pending:release-notes'
 const hasNotesLabel = 'has:release-notes'
@@ -33,33 +33,8 @@ function shouldHaveReleaseNotes(issue: any): boolean {
   return noteWorthy && !excluded
 }
 
-// see https://github.com/orgs/community/discussions/24492
-// and https://github.com/orgs/community/discussions/24367#discussioncomment-3243930
-async function getLinkedPrNumbers(context: Context, issue: any): Promise<number[]> {
-  const issueUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/issues/${issue.number}`
-  console.log(`issue url: ${issueUrl}`)
-
-  const response = await fetch(issueUrl)
-  if (response.status !== 200) {
-    throw new Error(`Failed to fetch issue page from ${issueUrl}: ${response.statusText}`)
-  }
-
-  const html = await response.text()
-  const document = cheerio.load(html)
-
-  const urls = Array.from(document('development-menu form span a')).map(element => document(element).attr('href'))
-  console.log(`urls: ${urls}`)
-
-  const prNumbers = urls
-    .filter(url => url != null && url.length > 0)
-    .map(url => parseInt(url!.split('/').pop()!)) //eslint-disable-line @typescript-eslint/no-non-null-assertion
-    .filter(id => !isNaN(id))
-
-  return Array.from(new Set(prNumbers))
-}
-
 async function hasReleaseNotes(github: GitHub, context: Context, issue: any): Promise<boolean> {
-  const linkedPrNumbers = await getLinkedPrNumbers(context, issue)
+  const linkedPrNumbers = await getLinkedPrNumbers(context.repo, issue)
   console.log(`linked prs: ${linkedPrNumbers}`)
   if (linkedPrNumbers.length === 0) {
     return false
