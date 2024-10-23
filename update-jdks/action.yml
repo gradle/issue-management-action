@@ -1,0 +1,13 @@
+name: 'Update'
+description: 'Ensure that closed issues have release notes (or a decision about them)'
+author: 'Gradle'
+
+inputs:
+  token:
+    required: true
+    description: 'The GitHub authentication token'
+    default: ${{ github.token }}
+
+runs:
+  using: node20
+  main: ../dist/update-jdks/index.js
