@@ -10,11 +10,7 @@ const notReleaseNoteWorthyLabel = 'has:release-notes-decision'
 const worthyLabels = new Set<string>(['a:feature', 'a:regression', 'a:performance-improvement', 'a:epic'])
 const highlyVotedIssueThreshold = 20
 
-// prettier-ignore
-const releaseNotesPaths = new Set<string>([
-  'subprojects/docs/src/docs/release/notes.md',
-  'platforms/documentation/docs/src/docs/release/notes.md'
-])
+const releaseNotesPaths = /\/src\/docs\/(release\/notes\.md|userguide\/releases\/upgrading\/upgrading_version_.+\.adoc)/
 
 function shouldHaveReleaseNotes(issue: any): boolean {
   const labels = issue.labels.nodes.map((label: any) => label.name)
@@ -66,7 +62,7 @@ async function hasReleaseNotes(github: GitHub, context: Context, issue: any): Pr
     .map((number: number) => response.repository[`pr${number}`])
     .filter(pr => pr.state === 'MERGED')
     .flatMap(pr => pr.files.nodes.map((node: any) => node.path))
-    .some((path: string) => releaseNotesPaths.has(path))
+    .some((path: string) => releaseNotesPaths.test(path))
 }
 
 async function run(github: GitHub, context: Context): Promise<void> {
@@ -143,7 +139,7 @@ async function run(github: GitHub, context: Context): Promise<void> {
       const commentBody = `${assigneeMention} This issue was closed as completed and looks release-note worthy, but no PR with release-notes update has been found.
 Please, do one of the following:
 
-1. Attach a PR with the release notes update to this issue.
+1. Attach a PR with the release notes or upgrade guide update to this issue.
 2. Add the \`${notReleaseNoteWorthyLabel}\` label to the issue if it's not release-note-worthy or it was fixed in an old release and close the issue.
 3. Close issue as "not planned".
 `
