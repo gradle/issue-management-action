@@ -41950,11 +41950,7 @@ const hasNotesLabel = 'has:release-notes';
 const notReleaseNoteWorthyLabel = 'has:release-notes-decision';
 const worthyLabels = new Set(['a:feature', 'a:regression', 'a:performance-improvement', 'a:epic']);
 const highlyVotedIssueThreshold = 20;
-// prettier-ignore
-const releaseNotesPaths = new Set([
-    'subprojects/docs/src/docs/release/notes.md',
-    'platforms/documentation/docs/src/docs/release/notes.md'
-]);
+const releaseNotesPaths = /\/src\/docs\/(release\/notes\.md|userguide\/releases\/upgrading\/upgrading_version_.+\.adoc)/;
 function shouldHaveReleaseNotes(issue) {
     const labels = issue.labels.nodes.map((label) => label.name);
     // prettier-ignore
@@ -41995,7 +41991,7 @@ async function hasReleaseNotes(github, context, issue) {
         .map((number) => response.repository[`pr${number}`])
         .filter(pr => pr.state === 'MERGED')
         .flatMap(pr => pr.files.nodes.map((node) => node.path))
-        .some((path) => releaseNotesPaths.has(path));
+        .some((path) => releaseNotesPaths.test(path));
 }
 async function run(github, context) {
     try {
@@ -42064,7 +42060,7 @@ async function run(github, context) {
             const commentBody = `${assigneeMention} This issue was closed as completed and looks release-note worthy, but no PR with release-notes update has been found.
 Please, do one of the following:
 
-1. Attach a PR with the release notes update to this issue.
+1. Attach a PR with the release notes or upgrade guide update to this issue.
 2. Add the \`${notReleaseNoteWorthyLabel}\` label to the issue if it's not release-note-worthy or it was fixed in an old release and close the issue.
 3. Close issue as "not planned".
 `;
