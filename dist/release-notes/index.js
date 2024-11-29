@@ -42037,12 +42037,14 @@ async function run(github, context) {
             return;
         }
         if (await hasReleaseNotes(github, context, issue)) {
-            await github.rest.issues.removeLabel({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issueNumber,
-                name: pendingDecisionLabel
-            });
+            if (issue.labels.nodes.some((label) => label.name === pendingDecisionLabel)) {
+                await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    name: pendingDecisionLabel
+                });
+            }
             await github.rest.issues.addLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
