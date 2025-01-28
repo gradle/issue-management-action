@@ -41948,7 +41948,7 @@ const linked_prs_1 = __nccwpck_require__(7942);
 const pendingDecisionLabel = 'pending:release-notes';
 const hasNotesLabel = 'has:release-notes';
 const notReleaseNoteWorthyLabel = 'has:release-notes-decision';
-const worthyLabels = new Set(['a:feature', 'a:regression', 'a:performance-improvement', 'a:epic']);
+const worthyLabels = new Set(['a:feature', 'a:performance-improvement', 'a:epic']);
 const highlyVotedIssueThreshold = 20;
 const releaseNotesPaths = /\/src\/docs\/(release\/notes\.md|userguide\/releases\/upgrading\/upgrading_version_.+\.adoc)/;
 function shouldHaveReleaseNotes(issue) {

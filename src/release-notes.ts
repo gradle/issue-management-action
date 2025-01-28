@@ -7,7 +7,7 @@ const pendingDecisionLabel = 'pending:release-notes'
 const hasNotesLabel = 'has:release-notes'
 const notReleaseNoteWorthyLabel = 'has:release-notes-decision'
 
-const worthyLabels = new Set<string>(['a:feature', 'a:regression', 'a:performance-improvement', 'a:epic'])
+const worthyLabels = new Set<string>(['a:feature', 'a:performance-improvement', 'a:epic'])
 const highlyVotedIssueThreshold = 20
 
 const releaseNotesPaths = /\/src\/docs\/(release\/notes\.md|userguide\/releases\/upgrading\/upgrading_version_.+\.adoc)/
