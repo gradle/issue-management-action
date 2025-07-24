@@ -27,16 +27,19 @@ export async function run(github: GitHub, context: Context): Promise<void> {
     const issue = response.repository.issue
     const labels = issue.labels.nodes.map((label: any) => label.name)
 
-    var needsUpdate = false
-    if (issue.state === 'OPEN') {
-      needsUpdate = !(
-        labels.some((label: string) => label.startsWith('in:')) &&
-        labels.filter((label: string) => label.startsWith('a:')).length === 1 &&
-        !labels.includes('to-triage')
-      )
+    var labelsToAdd = []
+    if (issue.state === 'OPEN' && !labels.includes('to-triage')) {
+      if (!labels.some((label: string) => label.startsWith('in:'))) {
+        labelsToAdd.push('pending:code-area')
+      }
+      if (labels.filter((label: string) => label.startsWith('a:')).length !== 1) {
+        labelsToAdd.push('pending:issue-category')
+      }
     } else if (issue.state === 'CLOSED') {
       if (issue.stateReason === 'NOT_PLANNED') {
-        needsUpdate = !labels.some((label: string) => label.startsWith('closed:'))
+        if (!labels.some((label: string) => label.startsWith('closed:'))) {
+          labelsToAdd.push('pending:closed-reason')
+        }
         if (labels.includes('pending:milestone')) {
           await github.rest.issues.removeLabel({
             owner: context.repo.owner,
@@ -47,23 +50,17 @@ export async function run(github: GitHub, context: Context): Promise<void> {
         }
       } else if (issue.stateReason === 'COMPLETED') {
         if (issue.milestone === null) {
-          needsUpdate = true
-          await github.rest.issues.addLabels({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: issueNumber,
-            labels: ['pending:milestone']
-          })
+          labelsToAdd.push('pending:milestone')
         }
       }
     }
 
-    if (needsUpdate) {
+    if (labelsToAdd.length > 0) {
       await github.rest.issues.addLabels({
         owner: context.repo.owner,
         repo: context.repo.repo,
         issue_number: issueNumber,
-        labels: ['to-triage']
+        labels: ['to-triage'].concat(labelsToAdd)
       })
     }
   } catch (error) {
