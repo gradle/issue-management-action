@@ -30875,7 +30875,7 @@ async function run(github, context) {
         const issue = response.repository.issue;
         const labels = issue.labels.nodes.map((label) => label.name);
         var labelsToAdd = [];
-        if (issue.state === 'OPEN' && !labels.includes('to-triage')) {
+        if (issue.state === 'OPEN') {
             if (!labels.some((label) => label.startsWith('in:'))) {
                 labelsToAdd.push('pending:code-area');
             }
@@ -30903,7 +30903,7 @@ async function run(github, context) {
                 }
             }
         }
-        if (labelsToAdd.length > 0) {
+        if (labelsToAdd.length > 0 && !labels.includes('to-triage')) {
             await github.rest.issues.addLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,

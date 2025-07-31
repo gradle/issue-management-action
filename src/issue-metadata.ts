@@ -28,7 +28,7 @@ export async function run(github: GitHub, context: Context): Promise<void> {
     const labels = issue.labels.nodes.map((label: any) => label.name)
 
     var labelsToAdd = []
-    if (issue.state === 'OPEN' && !labels.includes('to-triage')) {
+    if (issue.state === 'OPEN') {
       if (!labels.some((label: string) => label.startsWith('in:'))) {
         labelsToAdd.push('pending:code-area')
       }
@@ -55,7 +55,7 @@ export async function run(github: GitHub, context: Context): Promise<void> {
       }
     }
 
-    if (labelsToAdd.length > 0) {
+    if (labelsToAdd.length > 0 && !labels.includes('to-triage')) {
       await github.rest.issues.addLabels({
         owner: context.repo.owner,
         repo: context.repo.repo,
