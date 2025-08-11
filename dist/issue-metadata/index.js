@@ -30856,6 +30856,11 @@ const core = __importStar(__nccwpck_require__(2186));
 const common = __importStar(__nccwpck_require__(9108));
 async function run(github, context) {
     try {
+        // workaround for a bug when milestoned/demilestoned event is triggered both for issue and PR
+        if (context.payload.issue?.pull_request) {
+            console.log('Skipping: the event was triggered for a pull request');
+            return;
+        }
         const issueNumber = context.payload.issue.number; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         const response = await github.graphql(`query($owner:String!, $name:String!, $issue: Int!) {
          repository(owner:$owner, name:$name){

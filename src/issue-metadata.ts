@@ -4,6 +4,11 @@ import { GitHub, Context } from './types'
 
 export async function run(github: GitHub, context: Context): Promise<void> {
   try {
+    // workaround for a bug when milestoned/demilestoned event is triggered both for issue and PR
+    if (context.payload.issue?.pull_request) {
+      console.log('Skipping: the event was triggered for a pull request')
+      return
+    }
     const issueNumber: number = context.payload.issue!.number // eslint-disable-line @typescript-eslint/no-non-null-assertion
     const response: any = await github.graphql(
       `query($owner:String!, $name:String!, $issue: Int!) {
