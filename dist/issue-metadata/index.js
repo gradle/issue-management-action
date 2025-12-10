@@ -30889,7 +30889,7 @@ async function run(github, context) {
             }
         }
         else if (issue.state === 'CLOSED') {
-            if (issue.stateReason === 'NOT_PLANNED') {
+            if (issue.stateReason === 'NOT_PLANNED' || issue.stateReason === 'DUPLICATE') {
                 if (!labels.some((label) => label.startsWith('closed:'))) {
                     labelsToAdd.push('pending:closed-reason');
                 }

@@ -41,7 +41,7 @@ export async function run(github: GitHub, context: Context): Promise<void> {
         labelsToAdd.push('pending:issue-category')
       }
     } else if (issue.state === 'CLOSED') {
-      if (issue.stateReason === 'NOT_PLANNED') {
+      if (issue.stateReason === 'NOT_PLANNED' || issue.stateReason === 'DUPLICATE') {
         if (!labels.some((label: string) => label.startsWith('closed:'))) {
           labelsToAdd.push('pending:closed-reason')
         }
