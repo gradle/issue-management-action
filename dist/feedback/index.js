@@ -30903,7 +30903,7 @@ const config = __importStar(__nccwpck_require__(6462));
 const common = __importStar(__nccwpck_require__(9108));
 const issuesQuery = `query($owner:String!, $name:String!, $labels: [String!]) {
     repository(owner:$owner, name:$name){
-      issues(last:100, labels: $labels){
+      issues(last:10, labels: $labels){
         nodes {
           id, number, updatedAt
           labels(first: 100) {
@@ -30928,7 +30928,7 @@ const issuesQuery = `query($owner:String!, $name:String!, $labels: [String!]) {
 }`;
 const pullsQuery = `query($owner:String!, $name:String!, $labels: [String!]) {
     repository(owner:$owner, name:$name){
-      pullRequests(last:100, labels: $labels){
+      pullRequests(last:10, labels: $labels){
         nodes {
           id, number, updatedAt
           labels(first: 100) {

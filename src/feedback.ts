@@ -5,7 +5,7 @@ import { GitHub, Context, RequestParameters } from './types'
 
 const issuesQuery = `query($owner:String!, $name:String!, $labels: [String!]) {
     repository(owner:$owner, name:$name){
-      issues(last:100, labels: $labels){
+      issues(last:10, labels: $labels){
         nodes {
           id, number, updatedAt
           labels(first: 100) {
@@ -31,7 +31,7 @@ const issuesQuery = `query($owner:String!, $name:String!, $labels: [String!]) {
 
 const pullsQuery = `query($owner:String!, $name:String!, $labels: [String!]) {
     repository(owner:$owner, name:$name){
-      pullRequests(last:100, labels: $labels){
+      pullRequests(last:10, labels: $labels){
         nodes {
           id, number, updatedAt
           labels(first: 100) {
