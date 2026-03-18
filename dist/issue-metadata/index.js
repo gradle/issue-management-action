@@ -35581,6 +35581,15 @@ async function run(github, context) {
                 if (issue.milestone === null) {
                     labelsToAdd.push('pending:milestone');
                 }
+                else if (issue.milestone.title.endsWith('.x')) {
+                    await github.rest.issues.update({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        issue_number: issueNumber,
+                        milestone: null
+                    });
+                    labelsToAdd.push('pending:milestone');
+                }
             }
         }
         if (labelsToAdd.length > 0 && !labels.includes('to-triage')) {

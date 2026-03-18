@@ -64,6 +64,14 @@ export async function run(github: GitHub, context: Context): Promise<void> {
       } else if (issue.stateReason === 'COMPLETED') {
         if (issue.milestone === null) {
           labelsToAdd.push('pending:milestone')
+        } else if (issue.milestone.title.endsWith('.x')) {
+          await github.rest.issues.update({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: issueNumber,
+            milestone: null
+          })
+          labelsToAdd.push('pending:milestone')
         }
       }
     }
