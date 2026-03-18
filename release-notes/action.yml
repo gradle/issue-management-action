@@ -9,5 +9,5 @@ inputs:
     default: ${{ github.token }}
 
 runs:
-  using: node20
+  using: node22
   main: ../dist/release-notes/index.js
