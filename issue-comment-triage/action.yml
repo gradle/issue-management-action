@@ -1,0 +1,13 @@
+name: 'Issue Management Action - Issue Comment Triage'
+description: 'Add to-triage label when a closed issue is commented on'
+author: 'Gradle'
+
+inputs:
+  token:
+    required: true
+    description: 'The GitHub authentication token'
+    default: ${{ github.token }}
+
+runs:
+  using: node20
+  main: ../dist/issue-comment-triage/index.js

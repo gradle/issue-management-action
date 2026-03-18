@@ -17,6 +17,7 @@
     "format:check": "prettier --check **/*.ts",
     "lint": "npx eslint . -c ./.github/linters/.eslintrc.yml",
     "build-feedback": "ncc build src/feedback.ts -o dist/feedback --license licenses.txt",
+    "build-issue-comment-triage": "ncc build src/issue-comment-triage.ts -o dist/issue-comment-triage --license licenses.txt",
     "build-issue-metadata": "ncc build src/issue-metadata.ts -o dist/issue-metadata --license licenses.txt",
     "build-pull-metadata": "ncc build src/pull-metadata.ts -o dist/pull-metadata --license licenses.txt",
     "build-release-notes": "ncc build src/release-notes.ts -o dist/release-notes --license licenses.txt",
