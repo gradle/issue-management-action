@@ -5,7 +5,7 @@ import { GitHub, Context } from './types'
 
 export function getGitHub(): GitHub {
   const token: string = core.getInput('token', { required: true })
-  return getOctokit(token, retry)
+  return getOctokit(token, {}, retry)
 }
 
 export function getContext(): Context {
