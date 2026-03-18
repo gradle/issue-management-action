@@ -38,6 +38,19 @@ export async function run(github: GitHub, context: Context): Promise<void> {
           issue_number: prNumber,
           labels: ['to-triage', pendingMilestoneLabel]
         })
+      } else if (pr.milestone.title.endsWith('.x')) {
+        await github.rest.issues.update({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          issue_number: prNumber,
+          milestone: null
+        })
+        await github.rest.issues.addLabels({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          issue_number: prNumber,
+          labels: ['to-triage', pendingMilestoneLabel]
+        })
       } else if (labels.includes(pendingMilestoneLabel)) {
         await github.rest.issues.removeLabel({
           owner: context.repo.owner,
