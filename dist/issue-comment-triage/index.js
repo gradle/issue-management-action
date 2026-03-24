@@ -35531,10 +35531,17 @@ async function run(github, context) {
         const response = await github.graphql(`query($owner:String!, $name:String!, $issue: Int!) {
          repository(owner:$owner, name:$name){
            issue(number: $issue) {
-             state, stateReason
+             state, stateReason, closedAt
              milestone { title }
              labels(first: 100) {
                nodes { name }
+             }
+             timelineItems(last: 1, itemTypes: [CLOSED_EVENT]) {
+               nodes {
+                 ... on ClosedEvent {
+                   actor { login }
+                 }
+               }
              }
            }
          }
@@ -35547,6 +35554,19 @@ async function run(github, context) {
         const labels = issue.labels.nodes.map((label) => label.name);
         if (issue.state !== 'CLOSED') {
             console.log('Skipping: the issue is not closed');
+            return;
+        }
+        const commentCreatedAt = new Date(context.payload.comment.created_at);
+        const issueClosedAt = new Date(issue.closedAt);
+        if (commentCreatedAt <= issueClosedAt) {
+            console.log('Skipping: the comment was created before the issue was closed');
+            return;
+        }
+        const commenter = context.payload.comment.user.login;
+        const closedByNodes = issue.timelineItems.nodes;
+        const closer = closedByNodes.length > 0 ? closedByNodes[0].actor?.login : null;
+        if (commenter === closer) {
+            console.log(`Skipping: the comment was made by the same person who closed the issue (${commenter})`);
             return;
         }
         if (labels.includes('to-triage')) {
