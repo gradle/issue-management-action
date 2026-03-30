@@ -35536,13 +35536,6 @@ async function run(github, context) {
              labels(first: 100) {
                nodes { name }
              }
-             timelineItems(last: 1, itemTypes: [CLOSED_EVENT]) {
-               nodes {
-                 ... on ClosedEvent {
-                   actor { login }
-                 }
-               }
-             }
            }
          }
        }`, {
@@ -35556,17 +35549,21 @@ async function run(github, context) {
             console.log('Skipping: the issue is not closed');
             return;
         }
-        const commentCreatedAt = new Date(context.payload.comment.created_at);
+        const commentCreatedAt = new Date(context.payload.comment.created_at); // eslint-disable-line @typescript-eslint/no-non-null-assertion
         const issueClosedAt = new Date(issue.closedAt);
         if (commentCreatedAt <= issueClosedAt) {
             console.log('Skipping: the comment was created before the issue was closed');
             return;
         }
-        const commenter = context.payload.comment.user.login;
-        const closedByNodes = issue.timelineItems.nodes;
-        const closer = closedByNodes.length > 0 ? closedByNodes[0].actor?.login : null;
-        if (commenter === closer) {
-            console.log(`Skipping: the comment was made by the same person who closed the issue (${commenter})`);
+        const commenter = context.payload.comment.user.login; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+        const permissionResponse = await github.rest.repos.getCollaboratorPermissionLevel({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            username: commenter
+        });
+        const permission = permissionResponse.data.permission;
+        if (permission === 'write' || permission === 'maintain' || permission === 'admin') {
+            console.log(`Skipping: the commenter (${commenter}) is a repo maintainer (${permission})`);
             return;
         }
         if (labels.includes('to-triage')) {
