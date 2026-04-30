@@ -35558,7 +35558,18 @@ async function run(github, context) {
         else if (issue.state === 'CLOSED') {
             if (issue.stateReason === 'NOT_PLANNED' || issue.stateReason === 'DUPLICATE') {
                 if (!labels.some((label) => label.startsWith('closed:'))) {
-                    labelsToAdd.push('pending:closed-reason');
+                    if (issue.stateReason === 'DUPLICATE') {
+                        // adding directly without to-triage
+                        await github.rest.issues.addLabels({
+                            owner: context.repo.owner,
+                            repo: context.repo.repo,
+                            issue_number: issueNumber,
+                            labels: ['closed:duplicate']
+                        });
+                    }
+                    else {
+                        labelsToAdd.push('pending:closed-reason');
+                    }
                 }
                 if (labels.includes('pending:milestone')) {
                     await github.rest.issues.removeLabel({
