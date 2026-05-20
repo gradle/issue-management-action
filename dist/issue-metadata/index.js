@@ -35546,6 +35546,9 @@ async function run(github, context) {
         });
         const issue = response.repository.issue;
         const labels = issue.labels.nodes.map((label) => label.name);
+        if (labels.includes('to-triage')) {
+            return;
+        }
         var labelsToAdd = [];
         if (issue.state === 'OPEN') {
             if (!labels.some((label) => label.startsWith('in:'))) {
@@ -35603,7 +35606,7 @@ async function run(github, context) {
                 }
             }
         }
-        if (labelsToAdd.length > 0 && !labels.includes('to-triage')) {
+        if (labelsToAdd.length > 0) {
             await github.rest.issues.addLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,

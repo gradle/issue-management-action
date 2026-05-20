@@ -32,6 +32,10 @@ export async function run(github: GitHub, context: Context): Promise<void> {
     const issue = response.repository.issue
     const labels = issue.labels.nodes.map((label: any) => label.name)
 
+    if (labels.includes('to-triage')) {
+      return
+    }
+
     var labelsToAdd = []
     if (issue.state === 'OPEN') {
       if (!labels.some((label: string) => label.startsWith('in:'))) {
@@ -86,7 +90,7 @@ export async function run(github: GitHub, context: Context): Promise<void> {
       }
     }
 
-    if (labelsToAdd.length > 0 && !labels.includes('to-triage')) {
+    if (labelsToAdd.length > 0) {
       await github.rest.issues.addLabels({
         owner: context.repo.owner,
         repo: context.repo.repo,
