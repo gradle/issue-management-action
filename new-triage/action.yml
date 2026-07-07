@@ -1,0 +1,13 @@
+name: 'Issue Management Action - New Triage'
+description: 'Add to-triage label to new issues and PRs from external contributors'
+author: 'Gradle'
+
+inputs:
+  token:
+    required: true
+    description: 'The GitHub authentication token'
+    default: ${{ github.token }}
+
+runs:
+  using: node24
+  main: ../dist/new-triage/index.js
