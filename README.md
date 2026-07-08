@@ -7,7 +7,17 @@
 [![Coverage](./badges/coverage.svg)](./badges/coverage.svg)
 
 This is an action for automation around issue management.
-Maintained by the Gradle Build Tool Support team. 
+Maintained by the Gradle Build Tool Product Operations team. 
+
+## Onboarding a repository
+
+To add the triage and/or feedback workflows to another repository, run:
+
+```bash
+script/setup-repo.sh <owner/name | GitHub URL>
+```
+
+It asks which workflows to add, opens a PR with them, and creates the labels those workflows rely on.
 
 ## Initial Setup
 
