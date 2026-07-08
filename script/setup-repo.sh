@@ -29,6 +29,20 @@ WORKFLOWS_DIR="$SCRIPT_DIR/../.github/workflows"
 workflows=()
 labels=()
 
+# Set by open_pr; cleaned up on exit.
+tmp=""
+ssh_ctl=""
+
+cleanup() {
+  [[ -n "$tmp" ]] && rm -rf "$tmp"
+  if [[ -n "$ssh_ctl" ]]; then
+    ssh -o ControlPath="$ssh_ctl" -O exit github.com >/dev/null 2>&1 || true
+    rm -f "$ssh_ctl"
+  fi
+  return 0
+}
+trap cleanup EXIT
+
 die() {
   echo -e "${RED}Error:${OFF} $*" >&2
   exit 1
@@ -52,6 +66,17 @@ split_label() {
 require_tools() {
   command -v gh >/dev/null 2>&1 || die "the GitHub CLI (gh) is required"
   command -v git >/dev/null 2>&1 || die "git is required"
+}
+
+# Route git's SSH transport through a single shared connection so the clone,
+# branch check, and push authenticate at most once instead of re-prompting for
+# the key passphrase each time. Best-effort: if the repo is cloned over HTTPS
+# the SSH command is never invoked, and if ssh is missing this is a no-op.
+enable_ssh_multiplexing() {
+  command -v ssh >/dev/null 2>&1 || return 0
+  # Keep the socket path short (< ~104 chars) to stay under the unix-socket limit.
+  ssh_ctl="/tmp/gh-setup-repo-ssh-$$.sock"
+  export GIT_SSH_COMMAND="ssh -o ControlMaster=auto -o ControlPath=$ssh_ctl -o ControlPersist=600"
 }
 
 # Parse any accepted form into "owner/name" and verify it is accessible.
@@ -112,10 +137,10 @@ select_workflows() {
 
 # Clone the repo, add the selected workflows, and open a PR (unless unchanged).
 open_pr() {
-  local tmp default_branch gh_login branch force existing_pr pr_body pr_url wf list
+  local default_branch gh_login branch force existing_pr pr_body pr_url wf list
   tmp="$(mktemp -d)"
-  trap 'rm -rf "$tmp"' RETURN
 
+  enable_ssh_multiplexing
   echo -e "Cloning ${BLUE}$repo${OFF} ..."
   gh repo clone "$repo" "$tmp" -- --depth 1 --quiet
 
@@ -135,14 +160,16 @@ open_pr() {
     return
   fi
 
-  git -C "$tmp" commit -q -m "Add issue management workflows"
+  git -C "$tmp" commit -q -s -m "Add issue management workflows"
 
   force=""
+  echo -e "Checking whether branch ${BLUE}$branch${OFF} exists on the remote ..."
   if git -C "$tmp" ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
     ask "Branch '$branch' already exists on the remote. Force-push over it?" ||
       die "aborted: not overwriting existing branch '$branch'"
     force="--force"
   fi
+  echo -e "Pushing branch ${BLUE}$branch${OFF} ..."
   git -C "$tmp" push -q $force -u origin "$branch"
 
   existing_pr="$(gh pr list --repo "$repo" --head "$branch" --state open --json url --jq '.[0].url')"
