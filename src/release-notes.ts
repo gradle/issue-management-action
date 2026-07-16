@@ -139,7 +139,7 @@ async function run(github: GitHub, context: Context): Promise<void> {
       const commentBody = `${assigneeMention} This issue was closed as completed and looks release-note worthy, but no PR with release-notes update has been found.
 Please, do one of the following:
 
-1. Attach a PR with the release notes or upgrade guide update to this issue.
+1. Attach a *merged* PR with the release notes or upgrade guide update to this issue.
 2. Add the \`${notReleaseNoteWorthyLabel}\` label to the issue if it's not release-note-worthy or it was fixed in an old release and close the issue.
 3. Close issue as "not planned".
 `
