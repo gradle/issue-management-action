@@ -66,6 +66,8 @@ export async function run(github: GitHub, context: Context): Promise<void> {
         issue_number: prNumber,
         milestone: null
       })
+    } else if (pr.state === 'OPEN') {
+      await common.removeClosedReasonLabels(github, context, prNumber, labels)
     }
   } catch (error) {
     // Fail the workflow run if an error occurs

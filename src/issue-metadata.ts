@@ -38,6 +38,7 @@ export async function run(github: GitHub, context: Context): Promise<void> {
 
     var labelsToAdd = []
     if (issue.state === 'OPEN') {
+      await common.removeClosedReasonLabels(github, context, issueNumber, labels)
       if (!labels.some((label: string) => label.startsWith('in:'))) {
         labelsToAdd.push('pending:code-area')
       }
