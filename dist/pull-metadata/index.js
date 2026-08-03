@@ -35667,7 +35667,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getContext = exports.getGitHub = void 0;
+exports.removeClosedReasonLabels = exports.getContext = exports.getGitHub = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github_1 = __nccwpck_require__(5438);
 const plugin_retry_1 = __nccwpck_require__(6298);
@@ -35680,6 +35680,18 @@ function getContext() {
     return github_1.context;
 }
 exports.getContext = getContext;
+async function removeClosedReasonLabels(github, ctx, itemNumber, labels) {
+    const staleLabels = labels.filter((label) => label.startsWith('closed:') || label === 'pending:closed-reason');
+    for (const label of staleLabels) {
+        await github.rest.issues.removeLabel({
+            owner: ctx.repo.owner,
+            repo: ctx.repo.repo,
+            issue_number: itemNumber,
+            name: label
+        });
+    }
+}
+exports.removeClosedReasonLabels = removeClosedReasonLabels;
 
 
 /***/ }),
@@ -35777,6 +35789,9 @@ async function run(github, context) {
                 issue_number: prNumber,
                 milestone: null
             });
+        }
+        else if (pr.state === 'OPEN') {
+            await common.removeClosedReasonLabels(github, context, prNumber, labels);
         }
     }
     catch (error) {

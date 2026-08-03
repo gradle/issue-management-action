@@ -11,3 +11,15 @@ export function getGitHub(): GitHub {
 export function getContext(): Context {
   return context
 }
+
+export async function removeClosedReasonLabels(github: GitHub, ctx: Context, itemNumber: number, labels: string[]): Promise<void> {
+  const staleLabels = labels.filter((label: string) => label.startsWith('closed:') || label === 'pending:closed-reason')
+  for (const label of staleLabels) {
+    await github.rest.issues.removeLabel({
+      owner: ctx.repo.owner,
+      repo: ctx.repo.repo,
+      issue_number: itemNumber,
+      name: label
+    })
+  }
+}
