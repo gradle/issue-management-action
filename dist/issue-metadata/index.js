@@ -35812,6 +35812,14 @@ async function run(github, context) {
                     });
                     labelsToAdd.push('pending:milestone');
                 }
+                else if (labels.includes('pending:milestone')) {
+                    await github.rest.issues.removeLabel({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        issue_number: issueNumber,
+                        name: 'pending:milestone'
+                    });
+                }
             }
         }
         if (labelsToAdd.length > 0) {
